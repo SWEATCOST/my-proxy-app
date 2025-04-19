@@ -8,11 +8,34 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (req.method === "POST") {
-    // Google Apps Script로 proxy POST 요청 전송 (fetch)
-  } else if (req.method === "GET") {
-    // Google Apps Script로부터 누적 총합 fetch
-  } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbydH2KE4bbSqZ2ScKd78TNOhB8bKeJcw4vlXjTQnCaCmJuoiFSQTtOpX4Ytdp3rpF3S/exec";
+
+  try {
+    if (req.method === "POST") {
+      const response = await fetch(scriptUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(req.body),
+      });
+
+      const text = await response.text();
+      res.status(200).send(text);
+    }
+
+    else if (req.method === "GET") {
+      const response = await fetch(scriptUrl);
+      const json = await response.json();
+      res.status(200).json(json);
+    }
+
+    else {
+      res.status(405).json({ error: "Method Not Allowed" });
+    }
+
+  } catch (error) {
+    console.error("Proxy Error:", error);
+    res.status(500).json({ error: "Internal Server Error", detail: error.message });
   }
 }
